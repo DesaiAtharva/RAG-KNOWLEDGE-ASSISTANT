@@ -1,0 +1,18 @@
+# Backend
+backend/.env
+backend/__pycache__/
+backend/*.pyc
+backend/services/__pycache__/
+backend/faiss_index/
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env*
+frontend/*.log
+
+# OS
+.DS_Store
+Thumbs.db

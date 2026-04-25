@@ -1,0 +1,14 @@
+RAG KNOWLEDGE ASSISTANT TEST DOCUMENT
+
+The RAG Knowledge Assistant is a project built to demonstrate how to use local embeddings and external LLMs to create a grounded AI system.
+It uses FastAPI for the backend, Next.js for the frontend, and Groq for the LLM.
+The embedding model is sentence-transformers/all-MiniLM-L6-v2.
+The vector database used is FAISS (Facebook AI Similarity Search).
+
+Key features:
+1. Document Processing: PDF and Text extraction.
+2. Semantic Search: Using vector embeddings.
+3. Grounded Answering: Answers are strictly based on provided context.
+
+The refund policy for this assistant is "No refunds for digital magic".
+The secret password is "Antigravity2025".
