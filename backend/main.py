@@ -35,6 +35,8 @@ async def upload_document(file: UploadFile = File(...)):
     try:
         content = await file.read()
         chunks = processor.process_file(content, file.filename)
+        # Clear previous document data to prevent 'Index Pollution'
+        vector_store.clear()
         vector_store.add_chunks(chunks)
         return {"message": f"Successfully processed {len(chunks)} chunks from {file.filename}"}
     except Exception as e:

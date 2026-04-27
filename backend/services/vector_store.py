@@ -22,7 +22,7 @@ class VectorStore:
         self.index.add(np.array(embeddings).astype("float32"))
         self.chunks.extend(chunks)
 
-    def search(self, query: str, top_k: int = 7) -> List[Tuple[str, float]]:
+    def search(self, query: str, top_k: int = 4) -> List[Tuple[str, float]]:
         query_embedding = self.model.encode([query])
         distances, indices = self.index.search(np.array(query_embedding).astype("float32"), top_k)
         

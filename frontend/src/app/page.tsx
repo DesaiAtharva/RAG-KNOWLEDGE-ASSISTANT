@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 
+import ReactMarkdown from "react-markdown";
+
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -15,6 +17,9 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState("");
+  const [displayedText, setDisplayedText] = useState("");
+  const [typingIndex, setTypingIndex] = useState<number | null>(null);
+  const [showSources, setShowSources] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -68,7 +73,31 @@ export default function Home() {
         content: data.answer,
         sources: data.sources 
       };
-      setMessages((prev) => [...prev, aiMessage]);
+      
+      const newMessages = [...messages, userMessage, aiMessage];
+      setMessages(newMessages);
+      
+      // Start typing effect for the new AI message
+      const msgIndex = newMessages.length - 1;
+      setTypingIndex(msgIndex);
+      let i = 0;
+      const fullText = data.answer;
+      setDisplayedText("");
+      
+      const interval = setInterval(() => {
+        if (i < fullText.length) {
+          setDisplayedText(fullText.slice(0, i + 1));
+          i++;
+          // Auto-scroll as we type
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+          }
+        } else {
+          clearInterval(interval);
+          setTypingIndex(null);
+          setShowSources(msgIndex); // Show sources after typing
+        }
+      }, 10);
     } catch (error) {
       setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I encountered an error." }]);
     } finally {
@@ -135,9 +164,13 @@ export default function Home() {
             {messages.map((msg, i) => (
               <div key={i} className={`message-wrapper ${msg.role}`}>
                 <div className="message glass-card">
-                  <p className="message-content">{msg.content}</p>
-                  {msg.sources && msg.sources.length > 0 && (
-                    <div className="sources">
+                  <div className="message-content">
+                    <ReactMarkdown>
+                      {typingIndex === i ? displayedText : msg.content}
+                    </ReactMarkdown>
+                  </div>
+                  {msg.sources && msg.sources.length > 0 && (typingIndex !== i || showSources === i) && (
+                    <div className={`sources animate-fade-in ${showSources === i ? 'visible' : 'hidden-sources'}`}>
                       <p className="sources-title">Sources:</p>
                       {msg.sources.map((src, j) => (
                         <details key={j} className="source-item">
@@ -343,13 +376,51 @@ export default function Home() {
         }
 
         .message-content {
-          line-height: 1.5;
+          line-height: 1.6;
+          font-size: 0.95rem;
+        }
+
+        .message-content h1, .message-content h2, .message-content h3 {
+          margin-top: 1rem;
+          margin-bottom: 0.5rem;
+          color: var(--secondary);
+        }
+
+        .message-content p {
+          margin-bottom: 0.8rem;
+        }
+
+        .message-content ul, .message-content ol {
+          margin-bottom: 1rem;
+          padding-left: 1.5rem;
+        }
+
+        .message-content li {
+          margin-bottom: 0.4rem;
         }
 
         .sources {
           margin-top: 1rem;
           padding-top: 0.8rem;
           border-top: 1px solid var(--border);
+        }
+
+        .hidden-sources {
+          opacity: 0;
+          display: none;
+        }
+
+        .visible {
+          display: block;
+        }
+
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .sources-title {

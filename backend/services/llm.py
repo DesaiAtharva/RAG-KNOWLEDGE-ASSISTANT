@@ -31,30 +31,36 @@ class LLMService:
         return response.choices[0].message.content.strip()
 
     def generate_answer(self, query: str, context_chunks: List[str]) -> str:
-        context = "\n\n".join([f"[Chunk {i+1}]: {c}" for i, c in enumerate(context_chunks)])
-        prompt = f"""
-        You are an expert AI analysis assistant. Use the provided context chunks to answer the user's question.
+        context = "\n\n".join(context_chunks)
         
-        RULES:
-        1. Answer ONLY using the provided context.
-        2. If the answer requires combining information from multiple chunks, do so carefully.
-        3. If the information is not present, say: "I'm sorry, but I couldn't find sufficient information in the uploaded document to answer that."
-        4. Be precise, professional, and grounded. Do not hallucinate or use outside knowledge.
+        system_prompt = """
+        You are a strict RAG Assistant. Your answers must be precise, grounded, and professional.
         
-        CONTEXT:
-        {context}
-        
-        QUESTION:
-        {query}
-        
-        DETAILED ANSWER:
+        STRICT RULES:
+        1. Direct Answers: Do NOT use phrases like "Based on the context," "It appears," "Likely," or "According to the document." Just state the fact.
+        2. NO HEDGING: Do not guess, infer, or provide outside knowledge.
+        3. Length: Keep your answer to 2-3 sentences maximum. No long paragraphs.
+        4. Not Found: If the information is not explicitly in the provided text, you MUST say exactly: "Not found in the document."
+        5. Formatting: Use bold text for key terms.
         """
+        
+        user_prompt = f"""
+        Information:
+        {context}
+
+        Question:
+        {query}
+
+        Instruction: 
+        Answer the question directly in 2-3 sentences using ONLY the provided information. If not found, say "Not found in the document."
+        """
+        
         response = self.client.chat.completions.create(
             messages=[
-                {"role": "system", "content": "You are a specialized RAG assistant that synthesizes information from multiple context sources."},
-                {"role": "user", "content": prompt}
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
             ],
             model=self.model,
-            temperature=0.2,
+            temperature=0, # Maximum grounding/precision
         )
         return response.choices[0].message.content
